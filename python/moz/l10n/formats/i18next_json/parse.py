@@ -37,7 +37,7 @@ def build_pattern_message(value: str) -> PatternMessage:
     pos = 0
 
     for m in INTERP_RE.finditer(value):
-        pattern.append(value[pos:m.start()])
+        pattern.append(value[pos : m.start()])
         pattern.append(Expression(VariableRef(m.group(1))))
         pos = m.end()
 
@@ -57,7 +57,9 @@ def build_select_message(ordinal: bool, variants: dict[str, str]) -> SelectMessa
     options = {"select": "ordinal"} if ordinal else {}
 
     msg = SelectMessage(
-        declarations={"count": Expression(VariableRef("count"), "number", options=options)},
+        declarations={
+            "count": Expression(VariableRef("count"), "number", options=options)
+        },
         selectors=(VariableRef("count"),),
         variants={},
     )
@@ -69,7 +71,9 @@ def build_select_message(ordinal: bool, variants: dict[str, str]) -> SelectMessa
     return msg
 
 
-def find_plural_groups(items: dict[str, object]) -> tuple[dict[str, PluralGroup], set[str]]:
+def find_plural_groups(
+    items: dict[str, object],
+) -> tuple[dict[str, PluralGroup], set[str]]:
     """Scan a flat i18next JSON object and identify cardinal and ordinal plural groups.
 
     A group requires ``{base}_other`` to be present; lone suffix keys with no
@@ -124,7 +128,11 @@ def i18next_json_parse(source: str | bytes) -> Resource[Message]:
             base = key.rsplit("_", 1)[0]
             if base not in emitted:
                 info = plural_groups[base]
-                entries.append(Entry((base,), build_select_message(info["ordinal"], info["variants"])))
+                entries.append(
+                    Entry(
+                        (base,), build_select_message(info["ordinal"], info["variants"])
+                    )
+                )
                 emitted.add(base)
         elif isinstance(value, str):
             entries.append(Entry((key,), build_pattern_message(value)))

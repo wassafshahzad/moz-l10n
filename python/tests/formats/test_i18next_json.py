@@ -59,7 +59,11 @@ class TestBuildPatternMessage(TestCase):
 
     def test_mixed_unescaped_and_escaped(self):
         assert build_pattern_message("{{- raw}} and {{escaped}}") == PatternMessage(
-            [Expression(VariableRef("raw")), " and ", Expression(VariableRef("escaped"))]
+            [
+                Expression(VariableRef("raw")),
+                " and ",
+                Expression(VariableRef("escaped")),
+            ]
         )
 
     def test_nesting_stays_literal(self):
@@ -84,7 +88,10 @@ class TestFindPluralGroups(TestCase):
         groups, plural_keys = find_plural_groups(data)
         assert "item" in groups
         assert groups["item"]["ordinal"] is False
-        assert groups["item"]["variants"] == {"one": "one item", "other": "{{count}} items"}
+        assert groups["item"]["variants"] == {
+            "one": "one item",
+            "other": "{{count}} items",
+        }
         assert plural_keys == {"item_one", "item_other"}
 
     def test_all_cldr_suffixes_arabic(self):
@@ -98,7 +105,14 @@ class TestFindPluralGroups(TestCase):
         }
         groups, plural_keys = find_plural_groups(data)
         assert "count" in groups
-        assert set(groups["count"]["variants"].keys()) == {"zero", "one", "two", "few", "many", "other"}
+        assert set(groups["count"]["variants"].keys()) == {
+            "zero",
+            "one",
+            "two",
+            "few",
+            "many",
+            "other",
+        }
         assert len(plural_keys) == 6
 
     def test_ordinal_detection(self):
@@ -173,8 +187,7 @@ class TestI18nextJsonParse(TestCase):
     def test_plain_string(self):
         res = i18next_json_parse(src({"key": "value"}))
         assert res == Resource(
-            None,
-            [Section((), [Entry(("key",), PatternMessage(["value"]))])]
+            None, [Section((), [Entry(("key",), PatternMessage(["value"]))])]
         )
 
     def test_empty_object(self):
@@ -202,21 +215,28 @@ class TestI18nextJsonParse(TestCase):
         assert entries[0].id == ("key",)
 
     def test_plural_group_emitted_as_select_message(self):
-        res = i18next_json_parse(src({
-            "item_one": "{{count}} item",
-            "item_other": "{{count}} items",
-        }))
+        res = i18next_json_parse(
+            src(
+                {
+                    "item_one": "{{count}} item",
+                    "item_other": "{{count}} items",
+                }
+            )
+        )
         entries = res.sections[0].entries
         assert len(entries) == 1
         assert entries[0].id == ("item",)
         assert isinstance(entries[0].value, SelectMessage)
 
-
     def test_context_keys_are_plain_entries(self):
-        res = i18next_json_parse(src({
-            "key_male": "male variant",
-            "key_female": "female variant",
-        }))
+        res = i18next_json_parse(
+            src(
+                {
+                    "key_male": "male variant",
+                    "key_female": "female variant",
+                }
+            )
+        )
         ids = [e.id for e in res.sections[0].entries]
         assert ("key_male",) in ids
         assert ("key_female",) in ids
